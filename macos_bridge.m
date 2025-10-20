@@ -10,17 +10,13 @@ void make_window_transparent(void* gtk_window_ptr) {
         if (GDK_IS_MACOS_SURFACE(surface)) {
             NSWindow* ns_window = (__bridge NSWindow*)gdk_macos_surface_get_native_window(GDK_MACOS_SURFACE(surface));
             
-            // Make content area transparent for blur
-            [ns_window setOpaque:NO];
-            [ns_window setBackgroundColor:[NSColor clearColor]];
-            
-            // Keep title bar completely normal (opaque, system style)
+            // Less aggressive approach - only set titlebar to not be transparent
             [ns_window setTitlebarAppearsTransparent:NO];
             
-            NSLog(@"✅ Window configured with opaque titlebar, transparent content");
+            // Don't touch the window opacity or background color
+            // Let GTK handle the borders naturally
+            
+            NSLog(@"✅ Window configured with standard GTK borders, opaque titlebar");
         }
     }
-    
 }
-
-
