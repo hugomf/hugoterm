@@ -20,6 +20,7 @@ void make_window_transparent(void* gtk_window_ptr) {
             NSLog(@"✅ Window configured with opaque titlebar, transparent content");
         }
     }
+    
 }
 
 
