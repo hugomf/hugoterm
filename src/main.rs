@@ -1,7 +1,7 @@
 use gtk4::prelude::*;
 use gtk4::{Application, ApplicationWindow, Label};
 
-// Declare the external C function directly
+// Declare the external C functions
 #[cfg(target_os = "macos")]
 unsafe extern "C" {
     fn set_window_opacity(
@@ -11,20 +11,14 @@ unsafe extern "C" {
         green: f64, 
         blue: f64
     );
-}
-
-fn hex_to_rgb(hex: &str) -> Option<(f64, f64, f64)> {
-    let hex = hex.trim_start_matches('#');
-    if hex.len() != 6 {
-        return None;
-    }
     
-    let rgb = u32::from_str_radix(hex, 16).ok()?;
-    let red = ((rgb >> 16) & 0xff) as f64 / 255.0;
-    let green = ((rgb >> 8) & 0xff) as f64 / 255.0;
-    let blue = (rgb & 0xff) as f64 / 255.0;
+    fn set_opacity_and_blur(
+        gtk_window: *mut std::ffi::c_void,
+        opacity: f64,
+        blur_amount: f64
+    ) -> i32;
     
-    Some((red, green, blue))
+    fn init_blur_api();
 }
 
 fn main() {
@@ -33,12 +27,14 @@ fn main() {
         .build();
 
     app.connect_activate(|app| {
-        // Apply CSS for transparency BEFORE creating the window
+        // Apply CSS to make GTK widgets transparent and add border
         let provider = gtk4::CssProvider::new();
         provider.load_from_data(
             "window {
                 background-color: transparent;
                 background: transparent;
+                border: 1px solid rgba(128, 128, 128, 0.3);
+                border-radius: 10px;
             }
             
             * {
@@ -47,8 +43,6 @@ fn main() {
             }
             
             label {
-                background-color: transparent;
-                background: transparent;
                 color: white;
             }"
         );
@@ -69,31 +63,32 @@ fn main() {
         let label = Label::new(Some("Hello Transparent World!"));
         window.set_child(Some(&label));
 
-        // Apply macOS native transparency
+        // Apply macOS transparency and blur
         #[cfg(target_os = "macos")]
         {
             use std::time::Duration;
             let window_clone = window.clone();
             
-            let test_opacity = 0.7;
-            let test_color = "#ff0000";
-            
-            if let Some((red, green, blue)) = hex_to_rgb(test_color) {
-                println!("🎡 Converting {} to RGB: ({:.4}, {:.4}, {:.4})", test_color, red, green, blue);
-
-                glib::timeout_add_local(Duration::from_millis(100), move || {
-                    unsafe {
-                        set_window_opacity(
-                            window_clone.as_ptr() as *mut _, 
-                            test_opacity, 
-                            red, 
-                            green, 
-                            blue
-                        );
-                    }
-                    glib::ControlFlow::Break
-                });
+            // Initialize blur API first
+            unsafe {
+                init_blur_api();
             }
+            
+            let opacity = 0.5;     // 0.0 = fully transparent, 1.0 = fully opaque
+            let blur_amount = 0.2;  // 0.0 = no blur, 1.0 = maximum blur
+            
+            println!("🎨 Setting opacity: {}, blur: {}", opacity, blur_amount);
+
+            glib::timeout_add_local(Duration::from_millis(100), move || {
+                unsafe {
+                    set_opacity_and_blur(
+                        window_clone.as_ptr() as *mut _,
+                        opacity,
+                        blur_amount
+                    );
+                }
+                glib::ControlFlow::Break
+            });
         }
 
         window.present();
