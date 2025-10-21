@@ -79,7 +79,7 @@ void set_window_opacity(void* gtk_window_ptr, double opacity, double red, double
 // Set window opacity and blur in one call
 // opacity: 0.0 to 1.0 (0.0 = fully transparent, 1.0 = fully opaque)
 // blur_amount: 0.0 to 1.0 (0.0 = no blur, 1.0 = maximum blur)
-int set_opacity_and_blur(void* gtk_window_ptr, double opacity, double blur_amount) {
+int set_opacity_and_blur(void* gtk_window_ptr, double opacity, double blur_amount, double red, double green, double blue) {
     @autoreleasepool {
         GtkWindow* gtk_window = (GtkWindow*)gtk_window_ptr;
         GdkSurface* surface = gtk_native_get_surface(GTK_NATIVE(gtk_window));
@@ -104,7 +104,10 @@ int set_opacity_and_blur(void* gtk_window_ptr, double opacity, double blur_amoun
         [[contentView layer] setOpaque:NO];
         
         // Use opacity to create the background (you can change the color here)
-        NSColor* backgroundColor = [NSColor colorWithWhite:0.0 alpha:1.0 - opacity];
+       //NSColor* backgroundColor = [NSColor colorWithWhite:0.0 alpha:1.0 - opacity];
+        NSColor* backgroundColor = [NSColor colorWithRed:red green:green blue:blue alpha:1.0 - opacity];
+
+
         [[contentView layer] setBackgroundColor:[backgroundColor CGColor]];
         
         // Apply blur if requested and API is available

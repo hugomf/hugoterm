@@ -15,10 +15,28 @@ unsafe extern "C" {
     fn set_opacity_and_blur(
         gtk_window: *mut std::ffi::c_void,
         opacity: f64,
-        blur_amount: f64
+        blur_amount: f64,
+        red: f64, 
+        green: f64, 
+        blue: f64
     ) -> i32;
     
     fn init_blur_api();
+}
+
+
+fn hex_to_rgb(hex: &str) -> Option<(f64, f64, f64)> {
+    let hex = hex.trim_start_matches('#');
+    if hex.len() != 6 {
+        return None;
+    }
+    
+    let rgb = u32::from_str_radix(hex, 16).ok()?;
+    let red = ((rgb >> 16) & 0xff) as f64 / 255.0;
+    let green = ((rgb >> 8) & 0xff) as f64 / 255.0;
+    let blue = (rgb & 0xff) as f64 / 255.0;
+    
+    Some((red, green, blue))
 }
 
 fn main() {
@@ -69,26 +87,35 @@ fn main() {
             use std::time::Duration;
             let window_clone = window.clone();
             
+
+
             // Initialize blur API first
             unsafe {
                 init_blur_api();
             }
-            
+
             let opacity = 0.5;     // 0.0 = fully transparent, 1.0 = fully opaque
             let blur_amount = 0.2;  // 0.0 = no blur, 1.0 = maximum blur
-            
+            let tint_color = "#1e1e1e";
             println!("🎨 Setting opacity: {}, blur: {}", opacity, blur_amount);
 
-            glib::timeout_add_local(Duration::from_millis(100), move || {
-                unsafe {
-                    set_opacity_and_blur(
-                        window_clone.as_ptr() as *mut _,
-                        opacity,
-                        blur_amount
-                    );
-                }
-                glib::ControlFlow::Break
-            });
+            if let Some((red, green, blue)) = hex_to_rgb(tint_color) {
+                println!("🎡 Converting {} to RGB: ({:.4}, {:.4}, {:.4})", tint_color, red, green, blue);
+            
+                glib::timeout_add_local(Duration::from_millis(100), move || {
+                    unsafe {
+                        set_opacity_and_blur(
+                            window_clone.as_ptr() as *mut _,
+                            opacity,
+                            blur_amount,
+                            red,
+                            green,
+                            blue
+                        );
+                    }
+                    glib::ControlFlow::Break
+                });
+            }
         }
 
         window.present();
