@@ -4,13 +4,6 @@ use gtk4::{Application, ApplicationWindow, Label};
 // Declare the external C functions
 #[cfg(target_os = "macos")]
 unsafe extern "C" {
-    fn set_window_opacity(
-        gtk_window: *mut std::ffi::c_void, 
-        opacity: f64, 
-        red: f64, 
-        green: f64, 
-        blue: f64
-    );
     
     fn set_opacity_and_blur(
         gtk_window: *mut std::ffi::c_void,
@@ -23,7 +16,6 @@ unsafe extern "C" {
     
     fn init_blur_api();
 }
-
 
 fn hex_to_rgb(hex: &str) -> Option<(f64, f64, f64)> {
     let hex = hex.trim_start_matches('#');
