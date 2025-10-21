@@ -22,7 +22,6 @@ fn main() {
                 build.include(path);
             }
         }
-
         // Add common GTK include paths as fallback
         let common_paths = [
             "/opt/homebrew/include/gtk-4.0",
